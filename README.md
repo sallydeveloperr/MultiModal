@@ -25,7 +25,7 @@ Vision Transformer(ViT)는 2020년 Google Research에서 발표한 논문 "An Im
 
 ViT의 전체 처리 과정은 다음과 같습니다. 이미지를 패치로 자르고, 이를 일렬로 나열한 뒤 Transformer에 입력합니다.
 
-![vit overall Architecture](./img/vit%20overall%20Architecture.png)
+![vit overall Architecture](./img/vit_overall_Architecture.png)
 
 **처리 흐름**:
 1. **입력 이미지**: 224×224×3 크기의 RGB 이미지
@@ -40,7 +40,7 @@ ViT의 전체 처리 과정은 다음과 같습니다. 이미지를 패치로 �
 
 이미지를 고정 크기의 패치로 분할하고, 각 패치를 벡터로 변환합니다. 마치 문장을 단어(토큰)로 나누는 것과 같습니다.
 
-![Patch Embedding Process](./img/Patch%20Embedding%20Process.png)
+![Patch Embedding Process](./img/Patch_Embedding_Process.png)
 
 **핵심 포인트**:
 - 각 16×16 패치는 하나의 "토큰"처럼 처리됨
@@ -91,7 +91,7 @@ cls_token = nn.Parameter(torch.randn(1, 1, embedding_dim))
 
 Transformer Encoder는 입력된 패치 간의 관계를 학습하는 핵심 모듈입니다.
 
-![Transformer Encoder Block](./img/Transformer%20Encoder%20Block.png)
+![Transformer Encoder Block](./img/Transformer_Encoder_Block.png)
 
 **구성 요소**:
 - **Layer Normalization**: 학습 안정화
