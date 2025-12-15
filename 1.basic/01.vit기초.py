@@ -242,8 +242,53 @@ def cls_token():
     # └─────┴────────────────────────────┘
     print(f'결합 후 shape : {embeddings.shape}')    #[2,197,768]
     return embeddings
-s
 
+# 4. self-attention
+def self_attention():
+    '''self-attention 매커니즘
+    Multi-Head Self Attention의 구성요소
+        Q(Query) K(Key) V(Value)
+    '''
+    embedding_dim = 768
+    num_heads = 12
+    head_dim = embedding_dim // num_heads
+    seq_len = 197   #196패치 + 1 cls
+    batch_size = 1
+    # 더미 데이터 생성
+    x = torch.rand(batch_size, seq_len, embedding_dim)
+    # QKV 선형 레이어
+    qkv_proj = nn.Linear(embedding_dim, embedding_dim*3)    # 하나의 Linear 연산으로 QKV 동시에 생성
+    # QKV 계산(x)로 더미데이터를 넣어준다
+    qkv = qkv_proj(x)
+    print(f'QKV shape : {qkv.shape}')
+    # Q K V 분리
+    qkv = qkv.shape(batch_size, seq_len, 3, num_heads, head_dim) #[B, N, 3, heads, head_dim]
+    qkv = qkv.permut(2,0,3,1,4)     #[3, B, heads, N, head_dim]
+    q,k,v = qkv[0], qkv[1], qkv[2]
+    print(f'Q shape : {q.shape}')   # 동일한 모양
+    print(f'K shape : {k.shape}')   # 동일한 모양
+    print(f'V shape : {v.shape}')   # 동일한 모양
+    
+    # Attention Score 계산
+    scale = head_dim ** -0.5
+    attn = (q @ k.transpose(-2, -1)) * scale
+    print(f"\n[Attention Score]")
+    print(f"  Attention shape: {attn.shape}")  # [1, 12, 197, 197]
+    
+    # Softmax
+    attn = attn.softmax(dim=-1)
+    print(f"  Softmax 후 합계 (각 행): {attn[0, 0, 0].sum().item():.4f}")  # 1.0
+    
+    # Value와 곱하기
+    out = attn @ v
+    print(f"\n[Attention 적용]")
+    print(f"  출력 shape: {out.shape}")  # [1, 12, 197, 64]
+    
+    # 헤드 결합
+    out = out.transpose(1, 2).reshape(batch_size, seq_len, embedding_dim)
+    print(f"  헤드 결합 후: {out.shape}")  # [1, 197, 768]
+    
+    return attn
 
 
 
