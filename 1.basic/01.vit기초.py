@@ -290,8 +290,134 @@ def self_attention():
     
     return attn
 
+def mlp():
+    '''mlp 블럭'''
+    embedding_dim = 768
+    mlp_dim = embedding_dim * 4    # 일반적으로 4배 확장
+    print(f'입력/출력 차원 : {embedding_dim}')
+    print(f'히든 차원 : {mlp_dim}')
+    # MLP 블럭 정의
+    mlp = nn.Sequential(
+        nn. Linear(embedding_dim, mlp_dim),
+        nn.GELU(),   # 단순선형을 비선형으로 변형
+        nn.Linear(mlp_dim, embedding_dim)
+    )
+ # 파라미터 수 계산
+    total_params = sum(p.numel() for p in mlp.parameters())
+    print(f"  MLP 파라미터 수: {total_params:,}")
+    
+    # 더미 입력
+    x = torch.randn(1, 197, embedding_dim)
+    print(f"\n[입력/출력]")
+    print(f"  입력 shape: {x.shape}")
+    
+    # MLP 적용
+    out = mlp(x)
+    print(f"  출력 shape: {out.shape}")
+    
+    print(f"\n[GELU 활성화 함수]")
+    print(f"  GELU(x) = x * Phi(x)")
+    print(f"  ReLU보다 부드럽고, 음수 입력에도 작은 값 출력")
+    
+    return out
+
+# Transformer Encoderder block 구조
+def transformer_block():
+    '''Transformer Encoder 블럭'''
+    class TransformerBlock(nn.Module):
+        """간단한 Transformer Block 구현"""
+        def __init__(self, dim=768, num_heads=12, mlp_ratio=4.0):
+            super().__init__()
+            self.norm1 = nn.LayerNorm(dim)
+            self.attn = nn.MultiheadAttention(dim, num_heads, batch_first=True)
+            self.norm2 = nn.LayerNorm(dim)
+            self.mlp = nn.Sequential(
+                nn.Linear(dim, int(dim * mlp_ratio)),
+                nn.GELU(),
+                nn.Linear(int(dim * mlp_ratio), dim),
+            )
+        
+        def forward(self, x):
+            # Pre-norm 구조
+            # Attention with residual
+            x = x + self.attn(self.norm1(x), self.norm1(x), self.norm1(x))[0]
+            # MLP with residual
+            x = x + self.mlp(self.norm2(x))
+            return x
+    
+    # 블록 생성
+    block = TransformerBlock()
+    
+    # 파라미터 수
+    total_params = sum(p.numel() for p in block.parameters())
+    print(f"\n[Transformer Block 구성]")
+    print(f"  1. Layer Normalization")
+    print(f"  2. Multi-Head Self-Attention")
+    print(f"  3. Residual Connection")
+    print(f"  4. Layer Normalization")
+    print(f"  5. MLP (Feed-Forward)")
+    print(f"  6. Residual Connection")
+    print(f"\n  블록당 파라미터 수: {total_params:,}")
+    
+    # 더미 입력
+    x = torch.randn(1, 197, 768)
+    print(f"\n[입력/출력]")
+    print(f"  입력 shape: {x.shape}")
+    
+    out = block(x)
+    print(f"  출력 shape: {out.shape}")
+    
+    # ViT-Base는 12개 블록
+    print(f"\n[ViT-Base 전체 파라미터]")
+    print(f"  12개 블록 파라미터: {total_params * 12:,}")
+    
+    return block
+
+# self attention이 어디를 주목하는지 시각화
+def main():
+    # 1. 패치 임베딩
+    patches = patch_embedding()
+    # 2. 위치 임베딩
+    pos_embed = positional_embedding()
+    # 3. CLS 토큰
+    embeddings = cls_token()
+    # 4. self-Attention 
+    attention = self_attention()
+    # 5. MLP
+    mlp_output = mlp()
+    # 6. transfomer block
+    block = transformer_block()
+
+def _visualization_cls_attention():
+    '''cls 토큰이 각 패치를 얼마나 주목하는지 시각화
+    attn : [1, heads, 197, 197]
+    '''
+    # cls -> patch attention만 추출
+    cls_attn = attn[0, :, 0, 1:]   # [heads, 196]
+    # head 평균
+    cls_attn_mean = cls_attn.mean(dim=0)    # [196]
+    # 14 x 14 reshape
+    grid_size = image_size // patch_size
+    attn_map = cls_attn_mean.reshape(grid_size, grid_size)
+    # 정규화
+    attn_map = attn_map / attn_map.max()
+    return attn_map.detach().cpu().numpy()
+
+# 더미이미지 + Attention 시각호
+def demo_cls_attention_visualization():
+    # 1. 더미 이미지
+    image = np.random.rand(224,224,3)
+    # 2. self - attention 계산
+    attn = self_attention()
+    # 3. attention map 생성
+    attn_map = _visualization_cls_attention(attn)
+    # 시각화
+    plt.imshow(image)
+    plt.imshow(attn_map, cmap='jet', alpha=0.5)
+    plt.axis('off')
+    plt.show()
 
 
 if __name__ == '__main__':
-    patch_embedding()
-
+    #main()
+    demo_cls_attention_visualization()
