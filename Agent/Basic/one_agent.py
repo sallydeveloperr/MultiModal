@@ -187,14 +187,14 @@ class SimpleAgent:
     def print_info(self):
         """에이전트 정보 출력"""
         info = self.get_info()
-        print("\\n" + "="*60)
+        print("\n" + "="*60)
         print(f"[INFO] {self.name} 에이전트 정보")
         print("="*60)
         print(f"ID: {info['id']}")
         print(f"타입: {info['type']}")
         print(f"상태: {info['state']}")
         print(f"이력 개수: {info['history_size']}")
-        print(f"\\n[STATS] 통계:")
+        print(f"\n[STATS] 통계:")
         stats = info['stats']
         print(f"  - 총 실행: {stats['total_executed']}회")
         print(f"  - 성공: {stats['success_count']}회")
@@ -212,10 +212,11 @@ if __name__ == '__main__':
         {'action' : 'count_words', 'text':'hello my name is hong'},
             ]
     for task in test_case:
-        result = agent.excute(task)
-        if result['success']:
-            print(f"[OK] : {result['output']}")
-        else:
-            print(f"[FAIL] : {result['error']}")
+        result = agent.excute(task)        
     # 에이전트 정보 출력
     agent.print_info()
+
+    # 이력 출력 - 최근 5개
+    history = agent.get_history()
+    for his in history[:5]:
+        print(his) 
